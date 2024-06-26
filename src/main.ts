@@ -185,6 +185,17 @@ async function createReviewComment(
   comments: Array<{ body: string; path: string; line: number }>
 ): Promise<void> {
   try {
+    const body = JSON.stringify({
+      event: "COMMENT",
+      comments: comments.map(comment => ({
+        body: comment.body,
+        path: comment.path,
+        line: comment.line,
+      })),
+    });
+
+    console.log("Request body:", body);
+
     await octokit.pulls.createReview({
       owner,
       repo,
