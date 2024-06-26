@@ -15,6 +15,14 @@ inputs:
     description: "Maximum number of tokens that can be generated per analysis."
     required: false
     default: "700"
+  DELAY_BETWEEN_BATCHES:
+    description: "Delay in milliseconds between sending the requests to GitHub API."
+    required: false
+    default: "2500"
+  BATCH_SIZE:
+    description: "Amount of comments to send as a bunch"
+    required: false
+    default: "5"
   exclude:
     description: "Glob patterns to exclude files from the diff analysis"
     required: false
