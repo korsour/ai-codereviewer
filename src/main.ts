@@ -70,8 +70,8 @@ async function analyzeCode(
       const prompt = createPrompt(file, chunk, prDetails, customPrompts);
       const aiResponse = await getAIResponse(prompt);
 
-      console.log(`Prompt = ${prompt}`);
-      console.log(`Response: ${aiResponse}`);
+      console.log(`Prompt: ${prompt}`);
+      console.log(`Response: ${JSON.stringify(aiResponse)}`);
       console.log("---------");
 
       if (aiResponse) {
@@ -236,7 +236,7 @@ async function main() {
   console.log("Raw diff:", diff);
 
   const parsedDiff = parseDiff(diff);
-  console.log("Parsed diff:", parsedDiff);
+  console.log("Parsed diff files:", parsedDiff.map(file => file.to));
 
   const includePatterns = core
     .getInput("include")
