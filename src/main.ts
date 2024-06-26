@@ -174,16 +174,16 @@ function createComment(
   });
 }
 
-async function createReviewComment(
+async function createReviewCommentBatch(
   owner: string,
   repo: string,
   pull_number: number,
-  comments: Array<{ body: string; path: string; line: number }>
+  commentsBatch: Array<{ body: string; path: string; line: number }>
 ): Promise<void> {
   try {
     const body = JSON.stringify({
       event: "COMMENT",
-      comments: comments.map(comment => ({
+      comments: commentsBatch.map(comment => ({
         body: comment.body,
         path: comment.path,
         line: comment.line,
@@ -198,15 +198,32 @@ async function createReviewComment(
       repo,
       pull_number,
       event: "COMMENT",
-      comments: comments.map(comment => ({
+      comments: commentsBatch.map(comment => ({
         body: comment.body,
         path: comment.path,
         line: comment.line,
       })),
     });
-    console.log("Review comments created successfully.");
+    console.log("Review comments batch created successfully.");
   } catch (error) {
     console.error("Error creating review comments:", error);
+  }
+}
+
+async function createReviewComments(
+  owner: string,
+  repo: string,
+  pull_number: number,
+  comments: Array<{ body: string; path: string; line: number }>
+): Promise<void> {
+  const batchSize = 5;
+  for (let i = 0; i < comments.length; i += batchSize) {
+    const batch = comments.slice(i, i + batchSize);
+    await createReviewCommentBatch(owner, repo, pull_number, batch);
+    if (i + batchSize < comments.length) {
+      console.log("Waiting for 3 seconds before sending the next batch...");
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
   }
 }
 
@@ -283,7 +300,7 @@ async function main() {
   console.log("Comments generated:", comments);
 
   if (comments.length > 0) {
-    await createReviewComment(
+    await createReviewComments(
       prDetails.owner,
       prDetails.repo,
       prDetails.pull_number,
