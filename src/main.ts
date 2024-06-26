@@ -148,44 +148,6 @@ async function getAIResponse(prompt: string): Promise<Array<{
   }
 }
 
-function escapeJSONString(str: string): string {
-  return str.replace(/\\/g, '\\\\')
-            .replace(/"/g, '\\"')
-            .replace(/\u0000/g, '\\u0000')
-            .replace(/\u0001/g, '\\u0001')
-            .replace(/\u0002/g, '\\u0002')
-            .replace(/\u0003/g, '\\u0003')
-            .replace(/\u0004/g, '\\u0004')
-            .replace(/\u0005/g, '\\u0005')
-            .replace(/\u0006/g, '\\u0006')
-            .replace(/\u0007/g, '\\u0007')
-            .replace(/\u0008/g, '\\b')
-            .replace(/\u0009/g, '\\t')
-            .replace(/\u000A/g, '\\n')
-            .replace(/\u000B/g, '\\v')
-            .replace(/\u000C/g, '\\f')
-            .replace(/\u000D/g, '\\r')
-            .replace(/\u000E/g, '\\u000E')
-            .replace(/\u000F/g, '\\u000F')
-            .replace(/\u0010/g, '\\u0010')
-            .replace(/\u0011/g, '\\u0011')
-            .replace(/\u0012/g, '\\u0012')
-            .replace(/\u0013/g, '\\u0013')
-            .replace(/\u0014/g, '\\u0014')
-            .replace(/\u0015/g, '\\u0015')
-            .replace(/\u0016/g, '\\u0016')
-            .replace(/\u0017/g, '\\u0017')
-            .replace(/\u0018/g, '\\u0018')
-            .replace(/\u0019/g, '\\u0019')
-            .replace(/\u001A/g, '\\u001A')
-            .replace(/\u001B/g, '\\u001B')
-            .replace(/\u001C/g, '\\u001C')
-            .replace(/\u001D/g, '\\u001D')
-            .replace(/\u001E/g, '\\u001E')
-            .replace(/\u001F/g, '\\u001F')
-            .replace(/'/g, "\\'");
-}
-
 function createComment(
   file: File,
   chunk: Chunk,
@@ -205,7 +167,7 @@ function createComment(
       return [];
     }
     return {
-      body: escapeJSONString(aiResponse.reviewComment),
+      body: aiResponse.reviewComment,
       path: file.to,
       line: lineNumber,
     };
