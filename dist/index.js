@@ -186,21 +186,31 @@ function createReviewComment(owner, repo, pull_number, comments) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let i = 0; i < comments.length; i += BATCH_SIZE) {
             const batch = comments.slice(i, i + BATCH_SIZE);
-            try {
-                yield octokit.pulls.createReview({
-                    owner,
-                    repo,
-                    pull_number,
-                    comments: batch,
-                    event: "COMMENT",
-                });
-                console.log(`Successfully sent a batch of comments: ${JSON.stringify(batch)}`);
+            let retries = 3;
+            while (retries > 0) {
+                try {
+                    yield octokit.pulls.createReview({
+                        owner,
+                        repo,
+                        pull_number,
+                        comments: batch,
+                        event: "COMMENT",
+                    });
+                    console.log(`Successfully sent a batch of comments: ${JSON.stringify(batch)}`);
+                    break;
+                }
+                catch (error) {
+                    console.error(`Failed to create review comment (attempt ${4 - retries}):`, error);
+                    retries -= 1;
+                    if (retries === 0) {
+                        console.error("Dropping this batch and moving to the next.");
+                    }
+                    else {
+                        yield new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES)); // wait for the specified delay before retrying
+                    }
+                }
             }
-            catch (error) {
-                console.error("Failed to create review comment:", error);
-                throw new Error("Failed to create review comment");
-            }
-            yield new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES)); // wait for the specified delay
+            yield new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES)); // wait for the specified delay before processing the next batch
         }
     });
 }
@@ -244,7 +254,7 @@ function main() {
                 .split(",")
                 .map((s) => s.trim());
             const filteredDiff = parsedDiff.filter((file) => {
-                return !excludePatterns.some((pattern) => { var _a; return (0, minimatch_1.default)((_a = file.to) !== null && _a !== void 0 ? _a : "", pattern); });
+                return !excludePatterns.every((pattern) => { var _a; return (0, minimatch_1.default)((_a = file.to) !== null && _a !== void 0 ? _a : "", pattern); });
             });
             console.log("Filtered files:");
             filteredDiff.forEach(file => console.log(file.to));

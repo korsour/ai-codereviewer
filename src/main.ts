@@ -185,20 +185,29 @@ async function createReviewComment(
 ): Promise<void> {
     for (let i = 0; i < comments.length; i += BATCH_SIZE) {
         const batch = comments.slice(i, i + BATCH_SIZE);
-        try {
-            await octokit.pulls.createReview({
-                owner,
-                repo,
-                pull_number,
-                comments: batch,
-                event: "COMMENT",
-            });
-            console.log(`Successfully sent a batch of comments: ${JSON.stringify(batch)}`);
-        } catch (error) {
-            console.error("Failed to create review comment:", error);
-            throw new Error("Failed to create review comment");
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                await octokit.pulls.createReview({
+                    owner,
+                    repo,
+                    pull_number,
+                    comments: batch,
+                    event: "COMMENT",
+                });
+                console.log(`Successfully sent a batch of comments: ${JSON.stringify(batch)}`);
+                break;
+            } catch (error) {
+                console.error(`Failed to create review comment (attempt ${4 - retries}):`, error);
+                retries -= 1;
+                if (retries === 0) {
+                    console.error("Dropping this batch and moving to the next.");
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES)); // wait for the specified delay before retrying
+                }
+            }
         }
-        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES)); // wait for the specified delay
+        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES)); // wait for the specified delay before processing the next batch
     }
 }
 
@@ -252,7 +261,7 @@ async function main() {
             .map((s) => s.trim());
 
         const filteredDiff = parsedDiff.filter((file) => {
-            return !excludePatterns.some((pattern) =>
+            return !excludePatterns.every((pattern) =>
                 minimatch(file.to ?? "", pattern)
             );
         });
