@@ -152,23 +152,13 @@ async function getAIResponse(prompt: string): Promise<Array<{
   }
 }
 
-function escapeMarkdown(text: string): string {
-  return text
-    .replace(/\\/g, '\\\\')
-    .replace(/`/g, '\\`')
-    .replace(/\*/g, '\\*')
-    .replace(/_/g, '\\_')
-    .replace(/{/g, '\\{')
-    .replace(/}/g, '\\}')
-    .replace(/\[/g, '\\[')
-    .replace(/]/g, '\\]')
-    .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)')
-    .replace(/#/g, '\\#')
-    .replace(/\+/g, '\\+')
-    .replace(/-/g, '\\-')
-    .replace(/!/g, '\\!')
-    .replace(/"/g, '\\"');
+function escapeSpecialChars(text: string): string {
+  return text.replace(/\\/g, '\\\\')
+             .replace(/"/g, '\\"')
+             .replace(/'/g, "\\'")
+             .replace(/\n/g, '\\n')
+             .replace(/\r/g, '\\r')
+             .replace(/\t/g, '\\t');
 }
 
 function createComment(
@@ -190,7 +180,7 @@ function createComment(
       return [];
     }
     return {
-      body: escapeMarkdown(aiResponse.reviewComment),
+      body: escapeSpecialChars(aiResponse.reviewComment),
       path: file.to,
       line: lineNumber,
     };
