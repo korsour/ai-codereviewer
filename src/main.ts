@@ -9,8 +9,8 @@ const GITHUB_TOKEN: string = core.getInput("GITHUB_TOKEN");
 const OPENAI_API_KEY: string = core.getInput("OPENAI_API_KEY");
 const OPENAI_API_MODEL: string = core.getInput("OPENAI_API_MODEL");
 const MAX_TOKENS: number = Number(core.getInput("max_tokens"));
-const DELAY_BETWEEN_BATCHES: number = Number(core.getInput("DELAY_BETWEEN_BATCHES") || 1000);
-const BATCH_SIZE: number = Number(core.getInput("BATCH_SIZE") || 5);
+const DELAY_BETWEEN_BATCHES: number = Number(core.getInput("DELAY_BETWEEN_BATCHES"));
+const BATCH_SIZE: number = Number(core.getInput("BATCH_SIZE"));
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 

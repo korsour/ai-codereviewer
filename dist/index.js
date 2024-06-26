@@ -52,6 +52,8 @@ const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const OPENAI_API_KEY = core.getInput("OPENAI_API_KEY");
 const OPENAI_API_MODEL = core.getInput("OPENAI_API_MODEL");
 const MAX_TOKENS = Number(core.getInput("max_tokens"));
+const DELAY_BETWEEN_BATCHES = Number(core.getInput("DELAY_BETWEEN_BATCHES"));
+const BATCH_SIZE = Number(core.getInput("BATCH_SIZE"));
 const octokit = new rest_1.Octokit({ auth: GITHUB_TOKEN });
 const openai = new openai_1.default({
     apiKey: OPENAI_API_KEY,
@@ -182,8 +184,8 @@ function createComment(file, chunk, aiResponses) {
 }
 function createReviewComment(owner, repo, pull_number, comments) {
     return __awaiter(this, void 0, void 0, function* () {
-        for (let i = 0; i < comments.length; i += 5) {
-            const batch = comments.slice(i, i + 5);
+        for (let i = 0; i < comments.length; i += BATCH_SIZE) {
+            const batch = comments.slice(i, i + BATCH_SIZE);
             try {
                 yield octokit.pulls.createReview({
                     owner,
@@ -198,7 +200,7 @@ function createReviewComment(owner, repo, pull_number, comments) {
                 console.error("Failed to create review comment:", error);
                 throw new Error("Failed to create review comment");
             }
-            yield new Promise(resolve => setTimeout(resolve, 3000)); // wait for 3 seconds
+            yield new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES)); // wait for the specified delay
         }
     });
 }
