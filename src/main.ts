@@ -230,13 +230,13 @@ async function main() {
 
   const parsedDiff = parseDiff(diff);
 
-  const excludePatterns = core
-    .getInput("exclude")
+  const includePatterns = core
+    .getInput("include")
     .split(",")
     .map((s) => s.trim());
 
   const filteredDiff = parsedDiff.filter((file) => {
-    return !excludePatterns.some((pattern) =>
+    return includePatterns.some((pattern) =>
       minimatch(file.to ?? "", pattern)
     );
   });
