@@ -217,8 +217,10 @@ async function createReviewComments(
   comments: Array<{ body: string; path: string; line: number }>
 ): Promise<void> {
   const batchSize = 5;
+  console.log(`Total comments: ${comments.length}`);
   for (let i = 0; i < comments.length; i += batchSize) {
     const batch = comments.slice(i, i + batchSize);
+    console.log(`Sending batch ${Math.floor(i / batchSize) + 1}:`, batch);
     await createReviewCommentBatch(owner, repo, pull_number, batch);
     if (i + batchSize < comments.length) {
       console.log("Waiting for 3 seconds before sending the next batch...");
