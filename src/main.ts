@@ -185,25 +185,30 @@ async function createReviewComment(
 ): Promise<void> {
     for (let i = 0; i < comments.length; i += BATCH_SIZE) {
         const batch = comments.slice(i, i + BATCH_SIZE);
-        let retries = 3;
-        while (retries > 0) {
-            try {
-                await octokit.pulls.createReview({
-                    owner,
-                    repo,
-                    pull_number,
-                    comments: batch,
-                    event: "COMMENT",
-                });
-                console.log(`Successfully sent a batch of comments: ${JSON.stringify(batch)}`);
-                break;
-            } catch (error) {
-                console.error(`Failed to create review comment (attempt ${4 - retries}):`, error);
-                retries -= 1;
-                if (retries === 0) {
-                    console.error("Dropping this batch and moving to the next.");
-                } else {
-                    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES)); // wait for the specified delay before retrying
+        try {
+            await octokit.pulls.createReview({
+                owner,
+                repo,
+                pull_number,
+                comments: batch,
+                event: "COMMENT",
+            });
+            console.log(`Successfully sent a batch of comments: ${JSON.stringify(batch)}`);
+        } catch (error) {
+            console.error("Failed to create review comment for the batch:", error);
+            console.log("Splitting the batch into individual requests...");
+            for (const comment of batch) {
+                try {
+                    await octokit.pulls.createReview({
+                        owner,
+                        repo,
+                        pull_number,
+                        comments: [comment],
+                        event: "COMMENT",
+                    });
+                    console.log(`Successfully sent individual comment: ${JSON.stringify(comment)}`);
+                } catch (individualError) {
+                    console.error("Failed to create review comment for individual comment:", individualError);
                 }
             }
         }
