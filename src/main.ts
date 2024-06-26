@@ -255,13 +255,13 @@ async function main() {
         console.log("Unfiltered files:");
         parsedDiff.forEach(file => console.log(file.to));
 
-        const excludePatterns = core
-            .getInput("exclude")
+        const includePatterns = core
+            .getInput("include")
             .split(",")
             .map((s) => s.trim());
 
         const filteredDiff = parsedDiff.filter((file) => {
-            return !excludePatterns.every((pattern) =>
+            return includePatterns.some((pattern) =>
                 minimatch(file.to ?? "", pattern)
             );
         });

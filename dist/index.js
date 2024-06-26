@@ -249,12 +249,12 @@ function main() {
             const parsedDiff = (0, parse_diff_1.default)(diff);
             console.log("Unfiltered files:");
             parsedDiff.forEach(file => console.log(file.to));
-            const excludePatterns = core
-                .getInput("exclude")
+            const includePatterns = core
+                .getInput("include")
                 .split(",")
                 .map((s) => s.trim());
             const filteredDiff = parsedDiff.filter((file) => {
-                return !excludePatterns.every((pattern) => { var _a; return (0, minimatch_1.default)((_a = file.to) !== null && _a !== void 0 ? _a : "", pattern); });
+                return includePatterns.some((pattern) => { var _a; return (0, minimatch_1.default)((_a = file.to) !== null && _a !== void 0 ? _a : "", pattern); });
             });
             console.log("Filtered files:");
             filteredDiff.forEach(file => console.log(file.to));

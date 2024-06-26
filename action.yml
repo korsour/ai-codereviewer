@@ -23,8 +23,8 @@ inputs:
     description: "Amount of comments to send as a bunch"
     required: false
     default: "5"
-  exclude:
-    description: "Glob patterns to exclude files from the diff analysis"
+  include:
+    description: "Glob patterns to include files for the diff analysis"
     required: false
     default: ""
   custom_prompts:
