@@ -53,8 +53,7 @@ async function getDiff(
     pull_number,
     mediaType: { format: "diff" },
   });
-  // @ts-expect-error - response.data is a string
-  return response.data;
+  return response.data as string;
 }
 
 async function analyzeCode(
@@ -86,6 +85,7 @@ async function analyzeCode(
 }
 
 function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails, customPrompts: string): string {
+  const diffContent = chunk.changes.map(change => `${change.ln || change.ln2} ${change.content}`).join('\n');
   return `Your task is to review pull requests. Instructions:
 - Provide the response in following JSON format:  {"reviews": [{"lineNumber":  <line_number>, "reviewComment": "<review comment>"}]}
 - Do not give positive comments or compliments.
@@ -110,10 +110,7 @@ Git diff to review:
 
 \`\`\`diff
 ${chunk.content}
-${chunk.changes
-  // @ts-expect-error - ln and ln2 exists where needed
-  .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
-  .join("\n")}
+${diffContent}
 \`\`\`
 `;
 }
@@ -167,10 +164,16 @@ function createComment(
     if (!file.to) {
       return [];
     }
+    const lineNumber = Number(aiResponse.lineNumber);
+    const line = chunk.changes.find(change => (change.ln || change.ln2) === lineNumber);
+    if (!line) {
+      console.log(`Line number ${lineNumber} not found in chunk for file ${file.to}`);
+      return [];
+    }
     return {
       body: aiResponse.reviewComment,
       path: file.to,
-      line: Number(aiResponse.lineNumber),
+      line: lineNumber,
     };
   });
 }
@@ -181,13 +184,22 @@ async function createReviewComment(
   pull_number: number,
   comments: Array<{ body: string; path: string; line: number }>
 ): Promise<void> {
-  await octokit.pulls.createReview({
-    owner,
-    repo,
-    pull_number,
-    comments,
-    event: "COMMENT",
-  });
+  try {
+    await octokit.pulls.createReview({
+      owner,
+      repo,
+      pull_number,
+      event: "COMMENT",
+      comments: comments.map(comment => ({
+        body: comment.body,
+        path: comment.path,
+        line: comment.line,
+      })),
+    });
+    console.log("Review comments created successfully.");
+  } catch (error) {
+    console.error("Error creating review comments:", error);
+  }
 }
 
 async function main() {
@@ -269,7 +281,6 @@ async function main() {
       prDetails.pull_number,
       comments
     );
-    console.log("Review comments created successfully.");
   } else {
     console.log("No comments to create.");
   }
