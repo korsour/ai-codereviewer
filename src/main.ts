@@ -148,7 +148,7 @@ async function getAIResponse(prompt: string): Promise<Array<{
   }
 }
 
-function escapeSpecialChars(text: string): string {
+function escapeJSONString(text: string): string {
   return text.replace(/\\/g, '\\\\')
              .replace(/"/g, '\\"')
              .replace(/'/g, "\\'")
@@ -176,7 +176,7 @@ function createComment(
       return [];
     }
     return {
-      body: escapeSpecialChars(aiResponse.reviewComment),
+      body: escapeJSONString(aiResponse.reviewComment),
       path: file.to,
       line: lineNumber,
     };
