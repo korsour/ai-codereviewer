@@ -70,9 +70,9 @@ async function analyzeCode(
       const prompt = createPrompt(file, chunk, prDetails, customPrompts);
       const aiResponse = await getAIResponse(prompt);
 
-      console.log(`Prompt = ${prompt}`)
-      console.log(`Response: ${aiResponse}`)
-      console.log("---------")
+      console.log(`Prompt = ${prompt}`);
+      console.log(`Response: ${aiResponse}`);
+      console.log("---------");
 
       if (aiResponse) {
         const newComments = createComment(file, chunk, aiResponse);
@@ -191,11 +191,16 @@ async function createReviewComment(
 }
 
 async function main() {
+  console.log("Fetching PR details...");
   const prDetails = await getPRDetails();
+  console.log("PR Details fetched:", prDetails);
+
   let diff: string | null;
   const eventData = JSON.parse(
     readFileSync(process.env.GITHUB_EVENT_PATH ?? "", "utf8")
   );
+
+  console.log("Event data:", eventData);
 
   if (eventData.action === "opened") {
     diff = await getDiff(
@@ -228,12 +233,17 @@ async function main() {
     return;
   }
 
+  console.log("Raw diff:", diff);
+
   const parsedDiff = parseDiff(diff);
+  console.log("Parsed diff:", parsedDiff);
 
   const includePatterns = core
     .getInput("include")
     .split(",")
     .map((s) => s.trim());
+
+  console.log("Include patterns:", includePatterns);
 
   const filteredDiff = parsedDiff.filter((file) => {
     return includePatterns.some((pattern) =>
@@ -241,11 +251,17 @@ async function main() {
     );
   });
 
+  console.log("Filtered diff files:", filteredDiff.map(file => file.to));
+
   const customPrompts = core.getMultilineInput("custom_prompts")
       .map(customPrompt => `- ${customPrompt}`)
-      .join("\n")
+      .join("\n");
+
+  console.log("Custom prompts:", customPrompts);
 
   const comments = await analyzeCode(filteredDiff, prDetails, customPrompts);
+  console.log("Comments generated:", comments);
+
   if (comments.length > 0) {
     await createReviewComment(
       prDetails.owner,
@@ -253,6 +269,9 @@ async function main() {
       prDetails.pull_number,
       comments
     );
+    console.log("Review comments created successfully.");
+  } else {
+    console.log("No comments to create.");
   }
 }
 
